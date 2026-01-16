@@ -1,54 +1,68 @@
-version: '3'
+# version: '2'
 services:
-  db:
-    image: mysql
+  mariadb:
+    image: docker.io/bitnami/mariadb:latest
+    networks:
+      - network1
+    environment:
+      - MARIADB_USER=bn_moodle
+      - MARIADB_ROOT_PASSWORD=your_passwd
+      - MARIADB_PASSWORD=your_passwd
+      # - MARIADB_PORT=3307
+      - MARIADB_DATABASE=bitnami_moodle
+      - MARIADB_CHARACTER_SET=utf8mb4
+      - MARIADB_COLLATE=utf8mb4_unicode_ci
     volumes:
-      - db_data:/var/lib/mysql
-      # This is needed to allow old PHP versions to work with newer MySQL
-      - ./mysql-config:/etc/mysql/conf.d
-    environment:
-      MYSQL_ROOT_PASSWORD: password
-      MYSQL_DATABASE: moodle
-      MYSQL_USER: moodle
-      MYSQL_PASSWORD: password
-    restart: always
-  moodle:
-    image: aesr/moodle
+      - mariadb_data:/bitnami/mariadb
     ports:
-      - "8080:80"
-    links:
-      - db:database
-    volumes:
-      - ./moodledata:/var/www/moodledata
-      - ./moodle:/var/www/html
-    restart: always
-    environment:
-      MOODLE_DB_HOST: database
-      MOODLE_DB_PORT: 3306
-      MOODLE_DB_NAME: moodle
-      MOODLE_DB_USER: moodle
-      MOODLE_DB_PASSWORD: password
-      MOODLE_WWW_ROOT: ${MOODLE_WWW_ROOT:-http://localhost:8080}
-      MOODLE_DATA_ROOT: /var/www/moodledata
-    labels:
-      cron.moodle.command: "/usr/local/bin/php /var/www/html/admin/cli/cron.php"
-      cron.moodle.interval: "every minute"
-  phpmyadmin:
-    image: phpmyadmin/phpmyadmin
-    ports:
-      - "8081:80"
-    links:
-      - db:database
-    environment:
-      PMA_HOST: database
-  tasks:
-    image: funkyfuture/deck-chores:1
+      - "3307:3306"
     restart: unless-stopped
+
+  moodle:
+    # image: docker.io/bitnami/moodle:5.0
+    # image: aesr/moodle
+    image: docker.io/bitnamilegacy/moodle:latest
+
+    networks:
+      - network1
+    ports:
+      - "8090:8080"
+      - "8443:8443"
     environment:
-      TIMEZONE: Europe/Paris
-      LABEL_NAMESPACE: cron
+      - VIRTUAL_HOST=localhost
+      - VIRTUAL_PORT=8080
+      - LETSENCRYPT_HOST=localhost
+      - LETSENCRYPT_EMAIL=test@example.com
+      - MOODLE_DATABASE_HOST=mariadb
+      - MOODLE_DATABASE_PORT_NUMBER=3306
+      - MOODLE_DATABASE_USER=bn_moodle
+      - MOODLE_DATABASE_PASSWORD=your_passwd
+      - MOODLE_DATABASE_NAME=bitnami_moodle
+      - HTTP_HOST=localhost
+      - BITNAMI_DEBUG=true
+      - CLIENT_MAX_BODY_SIZE=20m
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+      - moodle_data:/bitnami/moodle
+      - moodledata_data:/bitnami/moodledata
+      - moodle_backups:/bitnami/course_backups
+      # - /mnt/volume_blr1_01/moodledata:/bitnami/moodledata
+      # - /mnt/volume_blr1_01/moodle_backups:/bitnami/course_backups
+    depends_on:
+      - mariadb
+    restart: unless-stopped
+
 volumes:
-    db_data:
-      driver: local
+  mariadb_data:
+    # driver: local
+  moodle_data:
+    # driver: local
+  moodledata_data:
+  moodle_backups:
+
+  #   driver: local
+
+networks:
+  network1:
+    driver: bridge
+    # name: mauticnet
+    # external: true

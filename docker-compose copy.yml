@@ -1,0 +1,65 @@
+version: '2'
+services:
+  mariadb:
+    image: docker.io/bitnami/mariadb:latest
+    networks:
+      - network1
+    environment:
+      - MARIADB_USER=bn_moodle
+      - MARIADB_ROOT_PASSWORD=your_passwd
+      - MARIADB_PASSWORD=your_passwd
+      # - MARIADB_PORT=3307
+      - MARIADB_DATABASE=bitnami_moodle
+      - MARIADB_CHARACTER_SET=utf8mb4
+      - MARIADB_COLLATE=utf8mb4_unicode_ci
+    volumes:
+      - mariadb_data:/bitnami/mariadb
+    ports:
+      - "3307:3306"
+    restart: unless-stopped
+
+  moodle:
+    image: docker.io/bitnami/moodle:4.5
+    networks:
+      - network1
+    ports:
+      - "8080:8080"
+      - "8443:8443"
+    environment:
+      - VIRTUAL_HOST=localhost
+      - VIRTUAL_PORT=8080
+      - LETSENCRYPT_HOST=localhost
+      - LETSENCRYPT_EMAIL=test@example.com
+      - MOODLE_DATABASE_HOST=mariadb
+      - MOODLE_DATABASE_PORT_NUMBER=3306
+      - MOODLE_DATABASE_USER=bn_moodle
+      - MOODLE_DATABASE_PASSWORD=your_passwd
+      - MOODLE_DATABASE_NAME=bitnami_moodle
+      - HTTP_HOST=localhost
+      - BITNAMI_DEBUG=true
+      - CLIENT_MAX_BODY_SIZE=20m
+    volumes:
+      - moodle_data:/bitnami/moodle
+      - moodledata_data:/bitnami/moodledata
+      - moodle_backups:/bitnami/course_backups
+      # - /mnt/volume_blr1_01/moodledata:/bitnami/moodledata
+      # - /mnt/volume_blr1_01/moodle_backups:/bitnami/course_backups
+    depends_on:
+      - mariadb
+    restart: unless-stopped
+
+volumes:
+  mariadb_data:
+    # driver: local
+  moodle_data:
+    # driver: local
+  moodledata_data:
+  moodle_backups:
+
+  #   driver: local
+
+networks:
+  network1:
+    driver: bridge
+    # name: mauticnet
+    # external: true
