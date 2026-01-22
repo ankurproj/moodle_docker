@@ -2,3 +2,4 @@ services:
   moodle:
     volumes:
       - ./moodle/local/applicationcheck:/var/www/html/local/applicationcheck:rw
+      - ./moodle/local/application_status_check:/var/www/html/local/application_status_check:rw
