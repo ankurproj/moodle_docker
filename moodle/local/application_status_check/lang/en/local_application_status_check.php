@@ -20,3 +20,12 @@ $string['schemenotice'] = 'Below are the courses the user is enrolled in.';
 $string['invalidinput'] = 'Invalid input. Please check your entries and try again.';
 // New strings for record lookup.
 $string['recordnotfound'] = 'No matching application record found.';
+$string['notenrolledany'] = 'User is not enrolled in any course.';
+$string['selectappliedcourse'] = 'Select applied course';
+$string['getstatus'] = 'Get status';
+$string['nostatusevaluation'] = 'No "Status Evaluation" grade item was found in this course.';
+$string['nostatusfound'] = 'No application status found for this user in that course.';
+$string['unknown'] = 'Unknown';
+$string['getscheme'] = 'Get Scheme';
+$string['autodetectcourseinfo'] = '';
+$string['landinginfo'] = 'Click below to open the application status checker.';

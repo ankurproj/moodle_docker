@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<XMLDB PATH="local/profile_feedback_mapper/db"
+       VERSION="2026012300"
+       COMMENT="Profile feedback mapper"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd">
+
+    <TABLES>
+
+        <TABLE NAME="local_pf_fb_map" COMMENT="Feedback to profile mappings">
+            <FIELDS>
+                <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+                <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+                <FIELD NAME="assignmentid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+                <FIELD NAME="feedback_field" TYPE="char" LENGTH="100" NOTNULL="true"/>
+                <FIELD NAME="profile_field" TYPE="char" LENGTH="100" NOTNULL="true"/>
+                <FIELD NAME="enabled" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1"/>
+                <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
+                <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true"/>
+            </FIELDS>
+
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+            </KEYS>
+
+            <INDEXES>
+                <INDEX NAME="uniq_map" UNIQUE="true"
+                       FIELDS="courseid,assignmentid,feedback_field,profile_field"/>
+            </INDEXES>
+        </TABLE>
+
+    </TABLES>
+</XMLDB>

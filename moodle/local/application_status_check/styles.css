@@ -1,0 +1,55 @@
+.application-course {
+  margin: 0.5rem 0;
+  padding: 0.6rem;
+  border: 1px solid #e1e1e1;
+  border-radius: 6px;
+  background: #fff;
+}
+.application-course .course-label {
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+}
+.application-courses {
+  display: flex;
+  flex-direction: column;
+  max-width: 720px;
+}
+.detected-course {
+  padding: 0.6rem;
+  margin: 0.6rem 0;
+  background: #f7f9fc;
+  border-radius: 6px;
+  border: 1px solid #e6eef8;
+}
+.btn-lg {
+  padding: 0.8rem 1.2rem;
+  font-size: 1.05rem;
+  border-radius: 8px;
+}
+.form .detected-course {
+  margin-top: 0.5rem;
+}
+/* small responsive tweaks */
+@media (max-width: 600px) {
+  .application-courses {
+    max-width: 100%;
+  }
+}
+
+/* Ensure the primary submit is visible and prominent in all themes */
+.mform .btn-primary,
+.mform .btn {
+  display: inline-block !important;
+  visibility: visible !important;
+  color: #ffffff !important;
+  background-color: #0d6efd !important;
+  border-color: #0a58ca !important;
+  padding: 0.8rem 1.2rem !important;
+  font-size: 1.05rem !important;
+  border-radius: 8px !important;
+  margin-top: 0.6rem !important;
+}
+
+.mform {
+  max-width: 860px;
+}
