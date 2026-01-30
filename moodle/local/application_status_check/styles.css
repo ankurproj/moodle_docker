@@ -14,6 +14,16 @@
   flex-direction: column;
   max-width: 720px;
 }
+
+/* Application status: light green background to indicate positive state */
+.application-status {
+  background-color: #7cef4f; /* light green */
+  border: 1px solid #5c8d47;
+  color: #19360c;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+}
 .detected-course {
   padding: 0.6rem;
   margin: 0.6rem 0;

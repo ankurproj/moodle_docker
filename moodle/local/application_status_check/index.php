@@ -31,8 +31,6 @@ if ($open == 0 && $_SERVER['REQUEST_METHOD'] === 'GET') {
     echo html_writer::tag('p', get_string('landinginfo', 'local_application_status_check'));
     $url = new moodle_url('/local/application_status_check/index.php', ['open' => 1]);
     echo html_writer::link($url, get_string('checkstatus', 'local_application_status_check'), ['class' => 'btn btn-primary btn-lg']);
-    // Also render the form below the landing content so users see the inputs immediately.
-    $form->display();
     echo $OUTPUT->footer();
     exit;
 }
@@ -68,7 +66,7 @@ if ($form->is_cancelled()) {
     // edge cases). If POST contains our expected fields, use raw POST as data
     // for testing only.
     $postkeys = array_keys($_POST);
-    $expected = ['email', 'dob', 'getscheme', 'courseid', 'checkstatus', 'sesskey', 'open'];
+    $expected = ['email', 'getscheme', 'courseid', 'checkstatus', 'sesskey', 'open'];
     $hasexpected = count(array_intersect($postkeys, $expected)) > 0;
     if ($hasexpected || preg_grep('/checkstatus/i', $postkeys) || isset($_POST['submitbutton'])) {
         $data = new stdClass();
@@ -104,7 +102,6 @@ if ($form->is_cancelled()) {
 // If we have form data (from moodleform or our fallback), process actions.
 if (!empty($data)) {
     $email = trim(core_text::strtolower($data->email ?? ''));
-    $dobts = (int)($data->dob ?? 0);
     $schemename = trim($data->course ?? '');
     $courseid = isset($data->courseid) ? (int)$data->courseid : 0;
 
@@ -146,7 +143,7 @@ if (!empty($data)) {
 
         $label = trim(($chosen->shortname ? $chosen->shortname . ' - ' : '') . $chosen->fullname);
         $form = new \local_application_status_check\form\status_form(new moodle_url('/local/application_status_check/index.php', ['open' => 1]), ['detectedcourse' => ['id' => $chosen->id, 'label' => $label]]);
-        $form->set_data(['email' => $email, 'dob' => $dobts, 'courseid' => $chosen->id]);
+        $form->set_data(['email' => $email, 'courseid' => $chosen->id]);
         echo $OUTPUT->notification(get_string('schemenotice', 'local_application_status_check'), 'notifymessage');
         $form->display();
         echo $OUTPUT->footer();
@@ -155,11 +152,8 @@ if (!empty($data)) {
         // Show application status from gradebook scale.
         $course = $DB->get_record('course', ['id' => $courseid], '*', MUST_EXIST);
 
-        echo html_writer::tag('h3', get_string('statusresult', 'local_application_status_check'));
-        $items = [];
-        $items[] = format_string(get_string('email', 'local_application_status_check') . ': ' . s($email));
-        $items[] = format_string(get_string('dob', 'local_application_status_check') . ': ' . userdate($dobts));
-        $items[] = format_string(get_string('course', 'local_application_status_check') . ': ' . format_string($course->shortname ?: $course->fullname));
+        // Display status above the form (same UX as scheme detection).
+        $label = trim(($course->shortname ? $course->shortname . ' - ' : '') . $course->fullname);
 
         $sql = "SELECT gg.finalgrade AS scale_index, s.scale AS scales
                     FROM {grade_items} gi
@@ -181,8 +175,11 @@ if (!empty($data)) {
         $record = $DB->get_record_sql($sql, $params, IGNORE_MISSING);
 
         if (!$record || $record->scale_index === null || $record->scale_index === '') {
-            $items[] = format_string(get_string('nostatusfound', 'local_application_status_check'));
-            echo html_writer::alist($items);
+            echo $OUTPUT->notification(get_string('nostatusfound', 'local_application_status_check'), 'notifyproblem');
+            // Re-render form with detected course so user can re-check or change.
+            $form = new \local_application_status_check\form\status_form(new moodle_url('/local/application_status_check/index.php', ['open' => 1]), ['detectedcourse' => ['id' => $course->id, 'label' => $label]]);
+            $form->set_data(['email' => $email, 'courseid' => $course->id]);
+            $form->display();
             echo $OUTPUT->footer();
             exit;
         }
@@ -191,8 +188,12 @@ if (!empty($data)) {
         $final = (int)$record->scale_index;
         $status = isset($scaleitems[$final - 1]) ? $scaleitems[$final - 1] : get_string('unknown', 'local_application_status_check');
 
-        $items[] = format_string(get_string('gradestatus', 'local_application_status_check') . ': ' . s($status));
-        echo html_writer::alist($items);
+        // Show the status as a notification (with custom class) and re-render the form with the detected course.
+        $message = format_string(get_string('gradestatus', 'local_application_status_check') . ': ' . s($status));
+        echo \html_writer::tag('div', $message, ['class' => 'application-status notifymessage']);
+        $form = new \local_application_status_check\form\status_form(new moodle_url('/local/application_status_check/index.php', ['open' => 1]), ['detectedcourse' => ['id' => $course->id, 'label' => $label]]);
+        $form->set_data(['email' => $email, 'courseid' => $course->id]);
+        $form->display();
         echo $OUTPUT->footer();
         exit;
     } else {

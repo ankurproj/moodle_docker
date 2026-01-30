@@ -16,8 +16,7 @@ class status_form extends \moodleform {
         $mform->setType('email', PARAM_EMAIL);
         $mform->addRule('email', get_string('required'), 'required');
 
-        // Make DOB optional to allow email-only quick lookup when desired.
-        $mform->addElement('date_selector', 'dob', get_string('dob', 'local_application_status_check'), ['optional' => true]);
+        // DOB removed: using email-only lookup. (DOB field intentionally omitted.)
 
         // Ensure form submissions include the 'open' flag so the landing page isn't shown.
         $mform->addElement('hidden', 'open', 1);
@@ -44,10 +43,7 @@ class status_form extends \moodleform {
 
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
-        // Basic DOB sanity: only validate when provided.
-        if (!empty($data['dob']) && !is_numeric($data['dob'])) {
-            $errors['dob'] = get_string('invaliddata', 'error');
-        }
+        // No DOB validation required (field removed).
         if (!empty($data['courseid'])) {
             if (!is_numeric($data['courseid'])) {
                 $errors['courseid'] = get_string('invaliddata', 'error');
