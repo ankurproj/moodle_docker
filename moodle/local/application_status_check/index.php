@@ -16,11 +16,7 @@ $PAGE->requires->css(new moodle_url('/local/application_status_check/styles.css'
 
 echo $OUTPUT->header();
 
-// Debug: log incoming request method and params to help diagnose why the landing
-// page is shown after submits. Remove these logs after debugging.
-error_log('[ASC DEBUG] REQUEST_METHOD=' . ($_SERVER['REQUEST_METHOD'] ?? ''));
-error_log('[ASC DEBUG] GET=' . json_encode($_GET));
-error_log('[ASC DEBUG] POST=' . json_encode($_POST));
+// (Debug logs removed for production)
 
 $form = new \local_application_status_check\form\status_form(new moodle_url('/local/application_status_check/index.php', ['open' => 1]));
 
@@ -38,8 +34,7 @@ if ($open == 0 && $_SERVER['REQUEST_METHOD'] === 'GET') {
 if ($form->is_cancelled()) {
     redirect(new moodle_url('/'));
 } else if ($data = $form->get_data()) {
-    // Log form data as JSON to keep it on a single line in logs.
-    error_log('[ASC DEBUG] form->get_data returned (before merge): ' . json_encode($data));
+    // form data received (merged with POST when necessary)
     // Some themes or form render flows don't define conditionally-added elements
     // (like 'courseid' or the 'checkstatus' submit) so moodleform->get_data()
     // omits them even when they are POSTed. Merge key POST values into $data
@@ -60,7 +55,7 @@ if ($form->is_cancelled()) {
             }
         }
     }
-    error_log('[ASC DEBUG] form->get_data returned (after merge): ' . json_encode($data));
+    // merged form data ready for processing
 } else if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST)) {
     // Fallback: sometimes moodleform->get_data() returns null (sesskey/session
     // edge cases). If POST contains our expected fields, use raw POST as data
@@ -94,8 +89,7 @@ if ($form->is_cancelled()) {
             $data->courseid = $_POST['courseid'];
         }
 
-        error_log('[ASC DEBUG] fallback using raw POST as $data: ' . print_r($data, true));
-        error_log('[ASC DEBUG] POST keys: ' . implode(',', $postkeys));
+        // fallback used raw POST as $data (for debug/testing)
     }
 }
 
@@ -122,6 +116,11 @@ if (!empty($data)) {
     $action_getscheme = !empty($data->getscheme) || isset($_POST['getscheme']) || in_array('getscheme', $postkeys, true);
     $action_checkstatus = !empty($data->checkstatus) || isset($_POST['checkstatus']) || isset($_POST['submitbutton']) || (count(preg_grep('/checkstatus/i', $postkeys)) > 0);
 
+    // If checkstatus was submitted as a numeric value (button value), treat it as courseid.
+    if (!empty($data->checkstatus) && is_numeric($data->checkstatus)) {
+        $courseid = (int)$data->checkstatus;
+    }
+
     // Handle actions: 'getscheme' to detect enrolled course, 'checkstatus' to show grade status.
     require_once($CFG->dirroot . '/course/lib.php');
     if ($action_getscheme) {
@@ -133,17 +132,14 @@ if (!empty($data)) {
             exit;
         }
 
-        // Pick the highest id as heuristic if multiple courses found.
-        $chosen = null;
+        // Build an array of detected courses (use fullname as the visible label).
+        $detectedcourses = [];
         foreach ($enrolled as $c) {
-            if ($chosen === null || $c->id > $chosen->id) {
-                $chosen = $c;
-            }
+            $detectedcourses[] = ['id' => $c->id, 'label' => format_string($c->fullname)];
         }
 
-        $label = trim(($chosen->shortname ? $chosen->shortname . ' - ' : '') . $chosen->fullname);
-        $form = new \local_application_status_check\form\status_form(new moodle_url('/local/application_status_check/index.php', ['open' => 1]), ['detectedcourse' => ['id' => $chosen->id, 'label' => $label]]);
-        $form->set_data(['email' => $email, 'courseid' => $chosen->id]);
+        $form = new \local_application_status_check\form\status_form(new moodle_url('/local/application_status_check/index.php', ['open' => 1]), ['detectedcourses' => $detectedcourses]);
+        $form->set_data(['email' => $email]);
         echo $OUTPUT->notification(get_string('schemenotice', 'local_application_status_check'), 'notifymessage');
         $form->display();
         echo $OUTPUT->footer();
@@ -153,7 +149,8 @@ if (!empty($data)) {
         $course = $DB->get_record('course', ['id' => $courseid], '*', MUST_EXIST);
 
         // Display status above the form (same UX as scheme detection).
-        $label = trim(($course->shortname ? $course->shortname . ' - ' : '') . $course->fullname);
+        // Use only the course fullname as the visible scheme label (no shortname prefix).
+        $label = format_string($course->fullname);
 
         $sql = "SELECT gg.finalgrade AS scale_index, s.scale AS scales
                     FROM {grade_items} gi
@@ -188,10 +185,16 @@ if (!empty($data)) {
         $final = (int)$record->scale_index;
         $status = isset($scaleitems[$final - 1]) ? $scaleitems[$final - 1] : get_string('unknown', 'local_application_status_check');
 
-        // Show the status as a notification (with custom class) and re-render the form with the detected course.
+        // Show the status as a notification (with custom class).
         $message = format_string(get_string('gradestatus', 'local_application_status_check') . ': ' . s($status));
         echo \html_writer::tag('div', $message, ['class' => 'application-status notifymessage']);
-        $form = new \local_application_status_check\form\status_form(new moodle_url('/local/application_status_check/index.php', ['open' => 1]), ['detectedcourse' => ['id' => $course->id, 'label' => $label]]);
+
+        // Show single scheme label (only once) above the form to avoid duplication.
+        echo \html_writer::tag('div', format_string($label), ['class' => 'detected-course']);
+
+        // Re-render the base form (without the detected-course rows) but keep courseid hidden
+        // so users can re-check if needed. This avoids showing the scheme twice.
+        $form = new \local_application_status_check\form\status_form(new moodle_url('/local/application_status_check/index.php', ['open' => 1]));
         $form->set_data(['email' => $email, 'courseid' => $course->id]);
         $form->display();
         echo $OUTPUT->footer();

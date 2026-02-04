@@ -15,21 +15,25 @@
   max-width: 720px;
 }
 
-/* Application status: light green background to indicate positive state */
-.application-status {
-  background-color: #7cef4f; /* light green */
-  border: 1px solid #5c8d47;
-  color: #19360c;
-  padding: 0.75rem 1rem;
-  border-radius: 6px;
-  margin-bottom: 1rem;
-}
 .detected-course {
   padding: 0.6rem;
   margin: 0.6rem 0;
   background: #f7f9fc;
   border-radius: 6px;
   border: 1px solid #e6eef8;
+}
+.detected-course-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.detected-course-row .detected-course {
+  flex: 1 1 auto;
+  margin-right: 1rem;
+}
+.check-status-btn {
+  flex: 0 0 auto;
+  margin-left: 1rem;
 }
 .btn-lg {
   padding: 0.8rem 1.2rem;
@@ -62,4 +66,160 @@
 
 .mform {
   max-width: 860px;
+}
+
+/* Professional form card and layout polish */
+.mform {
+  max-width: 900px;
+  margin: 1.5rem auto;
+  background: #ffffff;
+  border: 1px solid #dfe7ee; /* clearer outline for the whole form area */
+  padding: 1.25rem 1.5rem;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(15, 15, 15, 0.03);
+  position: relative;
+}
+
+/* form rows: label + control alignment */
+.mform .fitem {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.mform .fitem .fitemtitle {
+  width: 180px; /* slightly wider label column to keep single-row alignment */
+  font-weight: 600;
+  color: #2c3e50;
+  display: flex;
+  align-items: center; /* center the label with the input */
+}
+.mform .fitem .felement {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center; /* ensure input and icons align vertically */
+}
+
+/* Ensure direct children (input/select/button) sit on the same baseline */
+.mform .fitem .felement > * {
+  margin: 0;
+  vertical-align: middle;
+}
+
+/* Center validation/error icons/messages next to the input */
+.mform .fitem .felement .ferror,
+.mform .fitem .felement .error,
+.mform .fitem .felement .form-control .ferror {
+  margin-left: 0.75rem;
+  margin-top: 0;
+  align-self: center;
+  color: #d9534f;
+}
+.mform input[type="text"],
+.mform input[type="email"],
+.mform select,
+.mform .date_selector {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid #c7d6df; /* stronger border for visibility */
+  background: #ffffff;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.mform input[type="text"]::placeholder,
+.mform input[type="email"]::placeholder {
+  color: #6b7b86;
+}
+
+.mform input[type="text"]:focus,
+.mform input[type="email"]:focus,
+.mform select:focus,
+.mform .date_selector:focus {
+  outline: none;
+  border-color: #6ea8c8; /* soft blue focus */
+  box-shadow: 0 0 0 4px rgba(110, 168, 200, 0.12);
+}
+
+/* center primary actions and space them */
+.mform .buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+/* detected-course row and right-aligned check button */
+.detected-course-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.6rem;
+}
+.detected-course-row .detected-course {
+  flex: 1 1 auto;
+  margin-right: 1rem;
+  padding: 0.6rem 0.9rem;
+  background: #f6fbff;
+  border-left: 4px solid #e6f0ff;
+  border-radius: 6px;
+  color: #0b3b4a;
+  font-weight: 500;
+}
+.check-status-btn {
+  flex: 0 0 auto;
+  margin-left: 0;
+}
+
+/* application-status: subtle white card with left accent */
+.application-status,
+.application-status.notifymessage {
+  /* light, friendly green background with left accent; override Moodle defaults */
+  background-color: #eaf9ea !important;
+  border-left: 6px solid #8bd17a !important;
+  color: #1a5d2a !important;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  font-weight: 700;
+}
+
+/* make the whole form card visually outlined when focused or containing content */
+.mform:focus-within {
+  border-color: #c3d7e2;
+  box-shadow: 0 4px 18px rgba(12, 66, 99, 0.06);
+}
+
+/* small responsive tweaks */
+@media (max-width: 600px) {
+  .mform .fitem {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .mform .fitem .fitemtitle {
+    width: 100%;
+  }
+  .mform {
+    padding: 1rem;
+  }
+  /* Reduce check status button size by 25% for mobile view */
+  .check-status-btn {
+    padding: 0.45rem 0.675rem !important;
+    font-size: 0.7875rem !important;
+    white-space: nowrap;
+  }
+  /* Also reduce button in detected course row */
+  .detected-course-row {
+    gap: 0.5rem;
+  }
+  .detected-course-row .detected-course {
+    margin-right: 0.5rem;
+    padding: 0.45rem 0.675rem;
+    font-size: 0.9rem;
+  }
 }

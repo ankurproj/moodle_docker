@@ -30,14 +30,32 @@ class status_form extends \moodleform {
         $mform->addElement('html', '<div class="form-group"><p>' . get_string('autodetectcourseinfo', 'local_application_status_check') . '</p></div>');
         $mform->addElement('submit', 'getscheme', get_string('getscheme', 'local_application_status_check'));
 
-        // If a detected course was provided via customdata, show the course and render the primary action.
-        $detected = $this->_customdata['detectedcourse'] ?? null;
-        if (is_array($detected) && !empty($detected['id'])) {
-            $mform->addElement('html', \html_writer::tag('div', format_string($detected['label']), ['class' => 'detected-course']));
-            $mform->addElement('hidden', 'courseid', (int)$detected['id']);
-            $mform->setType('courseid', PARAM_INT);
-            // Use an explicit named submit so controller can detect it reliably.
-            $mform->addElement('submit', 'checkstatus', get_string('checkstatus', 'local_application_status_check'));
+        // If detected course(s) are provided via customdata, render each as a row
+        // with the course fullname and a right-aligned check button that submits
+        // the course id as the button value (name="checkstatus", value="{id}").
+        $detected = $this->_customdata['detectedcourses'] ?? $this->_customdata['detectedcourse'] ?? null;
+        if (!empty($detected)) {
+            // Normalize to array of courses
+            $courses = [];
+            if (is_array($detected) && array_key_exists('id', $detected)) {
+                $courses[] = $detected;
+            } else if (is_array($detected)) {
+                $courses = $detected;
+            }
+
+            $html = '<div class="application-courses">';
+            foreach ($courses as $c) {
+                $label = format_string($c['label'] ?? ($c['fullname'] ?? ''));
+                $id = (int)($c['id'] ?? 0);
+                // Each button will submit the parent form with name 'checkstatus' and value set to course id.
+                $html .= '<div class="detected-course-row" style="display:flex;align-items:center;justify-content:space-between">';
+                $html .= '<div class="detected-course">' . $label . '</div>';
+                $html .= '<button type="submit" name="checkstatus" value="' . $id . '" class="btn btn-primary check-status-btn">' . get_string('checkstatus', 'local_application_status_check') . '</button>';
+                $html .= '</div>';
+            }
+            $html .= '</div>';
+
+            $mform->addElement('html', $html);
         }
     }
 
