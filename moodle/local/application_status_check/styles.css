@@ -43,6 +43,38 @@
 .form .detected-course {
   margin-top: 0.5rem;
 }
+
+/* CAPTCHA styling - remove blue box and clean up appearance */
+.captcha-wrapper {
+  margin: 1rem 0 !important;
+}
+.captcha-wrapper .fitem {
+  border: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+.captcha-wrapper .fitemtitle {
+  display: none !important;
+}
+.captcha-wrapper .felement {
+  margin-left: 0 !important;
+  width: 100% !important;
+}
+/* Hide the security question label and help button */
+#fitem_id_recaptcha_element .fitemtitle,
+#fitem_id_recaptcha_element .helptooltip {
+  display: none !important;
+}
+#fitem_id_recaptcha_element {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+}
+#fitem_id_recaptcha_element .felement {
+  margin-left: 0 !important;
+}
+
 /* small responsive tweaks */
 @media (max-width: 600px) {
   .application-courses {

@@ -31,6 +31,7 @@ if ($open == 0 && $_SERVER['REQUEST_METHOD'] === 'GET') {
     exit;
 }
 
+
 if ($form->is_cancelled()) {
     redirect(new moodle_url('/'));
 } else if ($data = $form->get_data()) {
@@ -95,18 +96,43 @@ if ($form->is_cancelled()) {
 
 // If we have form data (from moodleform or our fallback), process actions.
 if (!empty($data)) {
-    $email = trim(core_text::strtolower($data->email ?? ''));
+    $input = trim($data->email ?? '');
     $schemename = trim($data->course ?? '');
     $courseid = isset($data->courseid) ? (int)$data->courseid : 0;
 
-    // 1) Find user by email.
-    $user = $DB->get_record('user', ['email' => $email, 'deleted' => 0], '*', IGNORE_MISSING);
+    // 1) Find user by email or mobile number.
+    $user = null;
+    
+    // First, try to find by email
+    if (filter_var($input, FILTER_VALIDATE_EMAIL)) {
+        $email = core_text::strtolower($input);
+        $user = $DB->get_record('user', ['email' => $email, 'deleted' => 0], '*', IGNORE_MISSING);
+    }
+    
+    // If not found and input looks like a mobile number, search by mobile number
+    if (!$user && preg_match('/^[0-9]{10,15}$/', $input)) {
+        $mobile = $input;
+        // Query to find user by mobile number from custom profile fields
+        $sql = "SELECT DISTINCT u.*
+                FROM {user} u
+                JOIN {user_info_data} d ON d.userid = u.id
+                JOIN {user_info_field} f ON f.id = d.fieldid
+                WHERE f.shortname IN ('phone_number', 'mobile_number', 'whatsapp_number')
+                  AND d.data = :mobile
+                  AND u.deleted = 0
+                LIMIT 1";
+        $user = $DB->get_record_sql($sql, ['mobile' => $mobile], IGNORE_MISSING);
+    }
+    
     if (!$user) {
         echo $OUTPUT->notification(get_string('usernotfound', 'local_application_status_check'), 'notifyproblem');
         $form->display();
         echo $OUTPUT->footer();
         exit;
     }
+    
+    // Store the input for form repopulation
+    $email = $input;
 
     // For now allow TEST MODE: skip strict DOB validation.
     $dobvalid = true;

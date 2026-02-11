@@ -10,13 +10,12 @@ class status_form extends \moodleform {
     public function definition() {
         $mform = $this->_form;
 
-        // We use auto-detect flow; `courses` array is not used.
+        // We use auto-detect flow; `schemes` array is not used.
 
         $mform->addElement('text', 'email', get_string('email', 'local_application_status_check'));
-        $mform->setType('email', PARAM_EMAIL);
+        $mform->setType('email', PARAM_TEXT);
         $mform->addRule('email', get_string('required'), 'required');
 
-        // DOB removed: using email-only lookup. (DOB field intentionally omitted.)
 
         // Ensure form submissions include the 'open' flag so the landing page isn't shown.
         $mform->addElement('hidden', 'open', 1);
@@ -28,6 +27,61 @@ class status_form extends \moodleform {
         // Initial step: don't ask for a course name. Provide a button to auto-detect courses
         // based on the provided email and dob.
         $mform->addElement('html', '<div class="form-group"><p>' . get_string('autodetectcourseinfo', 'local_application_status_check') . '</p></div>');
+        
+        // Add CAPTCHA for security
+        global $CFG;
+        if (!empty($CFG->recaptchapublickey) && !empty($CFG->recaptchaprivatekey)) {
+            // Add CAPTCHA without label - wrapped in custom div
+            $mform->addElement('html', '<div class="captcha-wrapper" style="margin: 1rem 0;">');
+            $mform->addElement('recaptcha', 'recaptcha_element', '');
+            $mform->addElement('html', '</div>');
+            
+            // Add JavaScript to disable submit buttons until CAPTCHA is checked
+            $mform->addElement('html', '
+            <script>
+            (function() {
+                function setButtonsEnabled(enabled) {
+                    var buttons = document.querySelectorAll("input[name=\"getscheme\"], button[name=\"checkstatus\"]");
+                    buttons.forEach(function(btn) {
+                        btn.disabled = !enabled;
+                        btn.style.opacity = enabled ? "1" : "0.5";
+                        btn.style.cursor = enabled ? "pointer" : "not-allowed";
+                    });
+                }
+
+                function captchaCompleted() {
+                    var response = document.querySelector("textarea[name=\"g-recaptcha-response\"]");
+                    return response && response.value && response.value.trim().length > 0;
+                }
+
+                function applyState() {
+                    setButtonsEnabled(captchaCompleted());
+                }
+
+                // Ensure buttons are disabled after DOM is ready
+                if (document.readyState === "loading") {
+                    document.addEventListener("DOMContentLoaded", function() {
+                        setButtonsEnabled(false);
+                    });
+                } else {
+                    setButtonsEnabled(false);
+                }
+
+                // Poll for CAPTCHA completion and keep buttons in sync
+                var intervalId = setInterval(function() {
+                    applyState();
+                    if (captchaCompleted()) {
+                        clearInterval(intervalId);
+                    }
+                }, 300);
+
+                // Also check on any change
+                document.addEventListener("change", applyState);
+            })();
+            </script>
+            ');
+        }
+        
         $mform->addElement('submit', 'getscheme', get_string('getscheme', 'local_application_status_check'));
 
         // If detected course(s) are provided via customdata, render each as a row
@@ -60,8 +114,33 @@ class status_form extends \moodleform {
     }
 
     public function validation($data, $files) {
+        global $CFG;
         $errors = parent::validation($data, $files);
-        // No DOB validation required (field removed).
+        
+        // Validate reCAPTCHA if configured (use Moodle's element verification)
+        if (!empty($CFG->recaptchapublickey) && !empty($CFG->recaptchaprivatekey)) {
+            $recaptchaelement = $this->_form->getElement('recaptcha_element');
+            $response = $this->_form->_submitValues['g-recaptcha-response'] ?? '';
+            $response = trim($response);
+            if ($response === '') {
+                $errors['recaptcha_element'] = get_string('missingreqreason', 'error');
+            } else if ($recaptchaelement) {
+                $verify = $recaptchaelement->verify($response);
+                if ($verify !== true) {
+                    $errors['recaptcha_element'] = get_string('incorrectpleasetryagain', 'auth');
+                }
+            }
+        }
+        
+        // Validate that email field contains either valid email or numeric mobile number
+        if (!empty($data['email'])) {
+            $input = trim($data['email']);
+            $is_email = filter_var($input, FILTER_VALIDATE_EMAIL);
+            $is_mobile = preg_match('/^[0-9]{10,15}$/', $input);
+            if (!$is_email && !$is_mobile) {
+                $errors['email'] = 'Please enter a valid email address or mobile number (10-15 digits)';
+            }
+        }
         if (!empty($data['courseid'])) {
             if (!is_numeric($data['courseid'])) {
                 $errors['courseid'] = get_string('invaliddata', 'error');

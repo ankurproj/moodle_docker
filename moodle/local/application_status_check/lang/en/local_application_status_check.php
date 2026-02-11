@@ -3,7 +3,7 @@
 
 $string['pluginname'] = 'Application Status Check';
 $string['checkstatus'] = 'Check Status';
-$string['email'] = 'Email';
+$string['email'] = 'Email / Mobile No.';
 $string['dob'] = 'Date of birth (YYYY-MM-DD)';
 $string['applicationid'] = 'Application ID';
 $string['submit'] = 'Check status';
