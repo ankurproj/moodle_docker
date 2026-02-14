@@ -18,6 +18,7 @@ $string['course'] = 'Course';
 $string['scheme'] = 'scheme';
 $string['schemenotice'] = 'Below are the schemes the user is enrolled in.';
 $string['invalidinput'] = 'Invalid input. Please check your entries and try again.';
+$string['invalidemailormobile'] = 'Please enter a valid email address or mobile number of max 10 digits without +91';
 // New strings for record lookup.
 $string['recordnotfound'] = 'No matching application record found.';
 $string['notenrolledany'] = 'User is not enrolled in any scheme.';

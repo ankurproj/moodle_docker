@@ -16,6 +16,30 @@ $PAGE->requires->css(new moodle_url('/local/application_status_check/styles.css'
 
 echo $OUTPUT->header();
 
+// Language selector dropdown
+$currentlang = current_language();
+$installedlangs = get_string_manager()->get_list_of_translations();
+$langmenu = '';
+if (count($installedlangs) > 1) {
+    $langmenu .= '<div class="language-selector-wrapper">';
+    $langmenu .= '<form method="get" action="' . $PAGE->url->out_omit_querystring() . '" class="language-selector-form">';
+    $langmenu .= '<select name="lang" id="language-selector" onchange="this.form.submit()" class="custom-select">';
+    foreach ($installedlangs as $langcode => $langname) {
+        $selected = ($langcode === $currentlang) ? 'selected' : '';
+        $langmenu .= '<option value="' . $langcode . '" ' . $selected . '>' . $langname . '</option>';
+    }
+    $langmenu .= '</select>';
+    // Preserve existing GET parameters
+    foreach ($_GET as $key => $value) {
+        if ($key !== 'lang') {
+            $langmenu .= '<input type="hidden" name="' . s($key) . '" value="' . s($value) . '">';
+        }
+    }
+    $langmenu .= '</form>';
+    $langmenu .= '</div>';
+    echo $langmenu;
+}
+
 // (Debug logs removed for production)
 
 $form = new \local_application_status_check\form\status_form(new moodle_url('/local/application_status_check/index.php', ['open' => 1]));

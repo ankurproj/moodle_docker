@@ -136,9 +136,9 @@ class status_form extends \moodleform {
         if (!empty($data['email'])) {
             $input = trim($data['email']);
             $is_email = filter_var($input, FILTER_VALIDATE_EMAIL);
-            $is_mobile = preg_match('/^[0-9]{10,15}$/', $input);
+            $is_mobile = preg_match('/^[0-9]{10}$/', $input);
             if (!$is_email && !$is_mobile) {
-                $errors['email'] = 'Please enter a valid email address or mobile number (10-15 digits)';
+                $errors['email'] = get_string('invalidemailormobile', 'local_application_status_check');
             }
         }
         if (!empty($data['courseid'])) {
