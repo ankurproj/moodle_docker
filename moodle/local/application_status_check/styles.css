@@ -1,15 +1,20 @@
+/* Scoped styles for Application Status Check plugin only */
+.application-status-check-plugin {
+  position: relative;
+}
+
 /* Language selector in top right corner */
-.language-selector-wrapper {
+.application-status-check-plugin .language-selector-wrapper {
   position: absolute;
   top: 80px;
   right: 20px;
   z-index: 1000;
 }
-.language-selector-form {
+.application-status-check-plugin .language-selector-form {
   margin: 0;
   padding: 0;
 }
-#language-selector {
+.application-status-check-plugin #language-selector {
   padding: 0.5rem 2rem 0.5rem 0.75rem;
   border: 1px solid #d1d7dc;
   border-radius: 6px;
@@ -25,28 +30,28 @@
   background-position: right 0.5rem center;
   min-width: 150px;
 }
-#language-selector:hover {
+.application-status-check-plugin #language-selector:hover {
   border-color: #6ea8c8;
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
 }
-#language-selector:focus {
+.application-status-check-plugin #language-selector:focus {
   outline: none;
   border-color: #6ea8c8;
   box-shadow: 0 0 0 3px rgba(110, 168, 200, 0.15);
 }
 
-.application-course {
+.application-status-check-plugin .application-course {
   margin: 0.5rem 0;
   padding: 0.6rem;
   border: 1px solid #e1e1e1;
   border-radius: 6px;
   background: #fff;
 }
-.application-course .course-label {
+.application-status-check-plugin .application-course .course-label {
   font-weight: 600;
   margin-bottom: 0.4rem;
 }
-.application-courses {
+.application-status-check-plugin .application-courses {
   display: flex;
   flex-direction: column;
   max-width: 720px;
@@ -59,56 +64,63 @@
   border-radius: 6px;
   border: 1px solid #e6eef8;
 }
-.detected-course-row {
+.application-status-check-plugin .detected-course {
+  padding: 0.6rem;
+  margin: 0.6rem 0;
+  background: #f7f9fc;
+  border-radius: 6px;
+  border: 1px solid #e6eef8;
+}
+.application-status-check-plugin .detected-course-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
-.detected-course-row .detected-course {
+.application-status-check-plugin .detected-course-row .detected-course {
   flex: 1 1 auto;
   margin-right: 1rem;
 }
-.check-status-btn {
+.application-status-check-plugin .check-status-btn {
   flex: 0 0 auto;
   margin-left: 1rem;
 }
-.btn-lg {
+.application-status-check-plugin .btn-lg {
   padding: 0.8rem 1.2rem;
   font-size: 1.05rem;
   border-radius: 8px;
 }
-.form .detected-course {
+.application-status-check-plugin .form .detected-course {
   margin-top: 0.5rem;
 }
 
 /* CAPTCHA styling - remove blue box and clean up appearance */
-.captcha-wrapper {
+.application-status-check-plugin .captcha-wrapper {
   margin: 1rem 0 !important;
 }
-.captcha-wrapper .fitem {
+.application-status-check-plugin .captcha-wrapper .fitem {
   border: none !important;
   background: transparent !important;
   padding: 0 !important;
   margin: 0 !important;
 }
-.captcha-wrapper .fitemtitle {
+.application-status-check-plugin .captcha-wrapper .fitemtitle {
   display: none !important;
 }
-.captcha-wrapper .felement {
+.application-status-check-plugin .captcha-wrapper .felement {
   margin-left: 0 !important;
   width: 100% !important;
 }
 /* Hide the security question label and help button */
-#fitem_id_recaptcha_element .fitemtitle,
-#fitem_id_recaptcha_element .helptooltip {
+.application-status-check-plugin #fitem_id_recaptcha_element .fitemtitle,
+.application-status-check-plugin #fitem_id_recaptcha_element .helptooltip {
   display: none !important;
 }
-#fitem_id_recaptcha_element {
+.application-status-check-plugin #fitem_id_recaptcha_element {
   background: transparent !important;
   border: none !important;
   padding: 0 !important;
 }
-#fitem_id_recaptcha_element .felement {
+.application-status-check-plugin #fitem_id_recaptcha_element .felement {
   margin-left: 0 !important;
 }
 
@@ -120,8 +132,8 @@
 }
 
 /* Ensure the primary submit is visible and prominent in all themes */
-.mform .btn-primary,
-.mform .btn {
+.application-status-check-plugin .mform .btn-primary,
+.application-status-check-plugin .mform .btn {
   display: inline-block !important;
   visibility: visible !important;
   color: #ffffff !important;
@@ -133,12 +145,12 @@
   margin-top: 0.6rem !important;
 }
 
-.mform {
+.application-status-check-plugin .mform {
   max-width: 860px;
 }
 
 /* Professional form card and layout polish */
-.mform {
+.application-status-check-plugin .mform {
   max-width: 900px;
   margin: 1.5rem auto;
   background: #ffffff;
@@ -150,44 +162,44 @@
 }
 
 /* form rows: label + control alignment */
-.mform .fitem {
+.application-status-check-plugin .mform .fitem {
   display: flex;
   align-items: center;
   gap: 1rem;
   margin-bottom: 1rem;
 }
-.mform .fitem .fitemtitle {
+.application-status-check-plugin .mform .fitem .fitemtitle {
   width: 180px; /* slightly wider label column to keep single-row alignment */
   font-weight: 600;
   color: #2c3e50;
   display: flex;
   align-items: center; /* center the label with the input */
 }
-.mform .fitem .felement {
+.application-status-check-plugin .mform .fitem .felement {
   flex: 1 1 auto;
   display: flex;
   align-items: center; /* ensure input and icons align vertically */
 }
 
 /* Ensure direct children (input/select/button) sit on the same baseline */
-.mform .fitem .felement > * {
+.application-status-check-plugin .mform .fitem .felement > * {
   margin: 0;
   vertical-align: middle;
 }
 
 /* Center validation/error icons/messages next to the input */
-.mform .fitem .felement .ferror,
-.mform .fitem .felement .error,
-.mform .fitem .felement .form-control .ferror {
+.application-status-check-plugin .mform .fitem .felement .ferror,
+.application-status-check-plugin .mform .fitem .felement .error,
+.application-status-check-plugin .mform .fitem .felement .form-control .ferror {
   margin-left: 0.75rem;
   margin-top: 0;
   align-self: center;
   color: #d9534f;
 }
-.mform input[type="text"],
-.mform input[type="email"],
-.mform select,
-.mform .date_selector {
+.application-status-check-plugin .mform input[type="text"],
+.application-status-check-plugin .mform input[type="email"],
+.application-status-check-plugin .mform select,
+.application-status-check-plugin .mform .date_selector {
   width: 100%;
   padding: 0.6rem 0.75rem;
   border-radius: 6px;
@@ -199,22 +211,22 @@
     box-shadow 120ms ease;
 }
 
-.mform input[type="text"]::placeholder,
-.mform input[type="email"]::placeholder {
+.application-status-check-plugin .mform input[type="text"]::placeholder,
+.application-status-check-plugin .mform input[type="email"]::placeholder {
   color: #6b7b86;
 }
 
-.mform input[type="text"]:focus,
-.mform input[type="email"]:focus,
-.mform select:focus,
-.mform .date_selector:focus {
+.application-status-check-plugin .mform input[type="text"]:focus,
+.application-status-check-plugin .mform input[type="email"]:focus,
+.application-status-check-plugin .mform select:focus,
+.application-status-check-plugin .mform .date_selector:focus {
   outline: none;
   border-color: #6ea8c8; /* soft blue focus */
   box-shadow: 0 0 0 4px rgba(110, 168, 200, 0.12);
 }
 
 /* center primary actions and space them */
-.mform .buttons {
+.application-status-check-plugin .mform .buttons {
   display: flex;
   gap: 1rem;
   justify-content: center;
@@ -222,14 +234,14 @@
 }
 
 /* detected-course row and right-aligned check button */
-.detected-course-row {
+.application-status-check-plugin .detected-course-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
   margin-bottom: 0.6rem;
 }
-.detected-course-row .detected-course {
+.application-status-check-plugin .detected-course-row .detected-course {
   flex: 1 1 auto;
   margin-right: 1rem;
   padding: 0.6rem 0.9rem;
@@ -239,14 +251,14 @@
   color: #0b3b4a;
   font-weight: 500;
 }
-.check-status-btn {
+.application-status-check-plugin .check-status-btn {
   flex: 0 0 auto;
   margin-left: 0;
 }
 
 /* application-status: subtle white card with left accent */
-.application-status,
-.application-status.notifymessage {
+.application-status-check-plugin .application-status,
+.application-status-check-plugin .application-status.notifymessage {
   /* light, friendly green background with left accent; override Moodle defaults */
   background-color: #eaf9ea !important;
   border-left: 6px solid #8bd17a !important;
@@ -259,46 +271,53 @@
 }
 
 /* make the whole form card visually outlined when focused or containing content */
-.mform:focus-within {
+.application-status-check-plugin .mform:focus-within {
   border-color: #c3d7e2;
   box-shadow: 0 4px 18px rgba(12, 66, 99, 0.06);
 }
 
 /* small responsive tweaks */
 @media (max-width: 600px) {
-  .mform .fitem {
+  .application-status-check-plugin .mform .fitem {
     flex-direction: column;
     align-items: stretch;
   }
-  .mform .fitem .fitemtitle {
+  .application-status-check-plugin .mform .fitem .fitemtitle {
     width: 100%;
   }
-  .mform {
+  .application-status-check-plugin .mform {
     padding: 1rem;
   }
   /* Reduce check status button size by 25% for mobile view */
-  .check-status-btn {
+  .application-status-check-plugin .check-status-btn {
     padding: 0.45rem 0.675rem !important;
     font-size: 0.7875rem !important;
     white-space: nowrap;
   }
   /* Also reduce button in detected course row */
-  .detected-course-row {
+  .application-status-check-plugin .detected-course-row {
     gap: 0.5rem;
   }
-  .detected-course-row .detected-course {
+  .application-status-check-plugin .detected-course-row .detected-course {
     margin-right: 0.5rem;
     padding: 0.45rem 0.675rem;
     font-size: 0.9rem;
   }
   /* Language selector on mobile */
-  .language-selector-wrapper {
+  .application-status-check-plugin .language-selector-wrapper {
     position: static;
     margin-bottom: 1rem;
     text-align: center;
   }
-  #language-selector {
+  .application-status-check-plugin #language-selector {
     width: 100%;
     max-width: 300px;
+  }
+  /* Minimize reCAPTCHA by 75% on mobile (25% of original size) */
+  .application-status-check-plugin #fitem_id_recaptcha_element .g-recaptcha,
+  .application-status-check-plugin .g-recaptcha {
+    transform: scale(0.25);
+    transform-origin: left top;
+    margin-bottom: -140px;
   }
 }

@@ -16,6 +16,9 @@ $PAGE->requires->css(new moodle_url('/local/application_status_check/styles.css'
 
 echo $OUTPUT->header();
 
+// Wrap plugin content in a scoped container
+echo '<div class="application-status-check-plugin">';
+
 // Language selector dropdown
 $currentlang = current_language();
 $installedlangs = get_string_manager()->get_list_of_translations();
@@ -251,12 +254,14 @@ if (!empty($data)) {
         exit;
     } else {
         $form->display();
+        echo '</div>'; // Close application-status-check-plugin wrapper
         echo $OUTPUT->footer();
         exit;
     }
 } else {
     // No form data at all; show the form.
     $form->display();
+    echo '</div>'; // Close application-status-check-plugin wrapper
     echo $OUTPUT->footer();
     exit;
 }

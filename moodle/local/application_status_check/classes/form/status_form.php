@@ -29,57 +29,106 @@ class status_form extends \moodleform {
         $mform->addElement('html', '<div class="form-group"><p>' . get_string('autodetectcourseinfo', 'local_application_status_check') . '</p></div>');
         
         // Add CAPTCHA for security
-        global $CFG;
+        global $CFG, $SESSION;
+        
+        // Initialize session flag if not exists
+        if (!isset($SESSION->application_status_captcha_verified)) {
+            $SESSION->application_status_captcha_verified = false;
+        }
+        
+        // Only show CAPTCHA if not already verified in this session
         if (!empty($CFG->recaptchapublickey) && !empty($CFG->recaptchaprivatekey)) {
-            // Add CAPTCHA without label - wrapped in custom div
-            $mform->addElement('html', '<div class="captcha-wrapper" style="margin: 1rem 0;">');
-            $mform->addElement('recaptcha', 'recaptcha_element', '');
-            $mform->addElement('html', '</div>');
-            
-            // Add JavaScript to disable submit buttons until CAPTCHA is checked
-            $mform->addElement('html', '
-            <script>
-            (function() {
-                function setButtonsEnabled(enabled) {
-                    var buttons = document.querySelectorAll("input[name=\"getscheme\"], button[name=\"checkstatus\"]");
-                    buttons.forEach(function(btn) {
-                        btn.disabled = !enabled;
-                        btn.style.opacity = enabled ? "1" : "0.5";
-                        btn.style.cursor = enabled ? "pointer" : "not-allowed";
-                    });
-                }
-
-                function captchaCompleted() {
-                    var response = document.querySelector("textarea[name=\"g-recaptcha-response\"]");
-                    return response && response.value && response.value.trim().length > 0;
-                }
-
-                function applyState() {
-                    setButtonsEnabled(captchaCompleted());
-                }
-
-                // Ensure buttons are disabled after DOM is ready
-                if (document.readyState === "loading") {
-                    document.addEventListener("DOMContentLoaded", function() {
-                        setButtonsEnabled(false);
-                    });
-                } else {
-                    setButtonsEnabled(false);
-                }
-
-                // Poll for CAPTCHA completion and keep buttons in sync
-                var intervalId = setInterval(function() {
-                    applyState();
-                    if (captchaCompleted()) {
-                        clearInterval(intervalId);
+            if (!$SESSION->application_status_captcha_verified) {
+                // CAPTCHA not yet verified - show it
+                $mform->addElement('html', '<div class="captcha-wrapper" style="margin: 1rem 0;" id="captcha-wrapper-div">');
+                $mform->addElement('recaptcha', 'recaptcha_element', '');
+                $mform->addElement('html', '</div>');
+                
+                // Add JavaScript to disable submit buttons until CAPTCHA is checked
+                $mform->addElement('html', '
+                <script>
+                (function() {
+                    var captchaVerified = false;
+                    
+                    function setButtonsEnabled(enabled) {
+                        var buttons = document.querySelectorAll("input[name=\"getscheme\"], button[name=\"checkstatus\"]");
+                        buttons.forEach(function(btn) {
+                            btn.disabled = !enabled;
+                            btn.style.opacity = enabled ? "1" : "0.5";
+                            btn.style.cursor = enabled ? "pointer" : "not-allowed";
+                        });
                     }
-                }, 300);
 
-                // Also check on any change
-                document.addEventListener("change", applyState);
-            })();
-            </script>
-            ');
+                    function captchaCompleted() {
+                        var response = document.querySelector("textarea[name=\"g-recaptcha-response\"]");
+                        return response && response.value && response.value.trim().length > 0;
+                    }
+
+                    function applyState() {
+                        if (captchaCompleted() && !captchaVerified) {
+                            captchaVerified = true;
+                            setButtonsEnabled(true);
+                        }
+                    }
+
+                    // Ensure buttons are disabled after DOM is ready
+                    if (document.readyState === "loading") {
+                        document.addEventListener("DOMContentLoaded", function() {
+                            setButtonsEnabled(false);
+                        });
+                    } else {
+                        setButtonsEnabled(false);
+                    }
+
+                    // Poll for CAPTCHA completion - enable once and keep enabled
+                    var intervalId = setInterval(function() {
+                        applyState();
+                        if (captchaVerified) {
+                            clearInterval(intervalId);
+                        }
+                    }, 300);
+
+                    // Also check on any change
+                    document.addEventListener("change", applyState);
+                    
+                    // If form is reloaded (after submission), check if CAPTCHA token still exists
+                    window.addEventListener("load", function() {
+                        if (captchaCompleted()) {
+                            captchaVerified = true;
+                            setButtonsEnabled(true);
+                        }
+                    });
+                })();
+                </script>
+                ');
+            } else {
+                // CAPTCHA already verified - show success message and enable buttons
+                $mform->addElement('html', '<div class="captcha-success-message" style="margin: 1rem 0; padding: 0.75rem 1rem; background: #d4edda; border: 1px solid #c3e6cb; border-radius: 6px; color: #155724;"><span style="font-size: 1.2em;">✓</span> <strong>CAPTCHA Verified</strong></div>');
+                
+                // Add JavaScript to ensure buttons are enabled
+                $mform->addElement('html', '
+                <script>
+                (function() {
+                    function setButtonsEnabled(enabled) {
+                        var buttons = document.querySelectorAll("input[name=\"getscheme\"], button[name=\"checkstatus\"]");
+                        buttons.forEach(function(btn) {
+                            btn.disabled = !enabled;
+                            btn.style.opacity = enabled ? "1" : "0.5";
+                            btn.style.cursor = enabled ? "pointer" : "not-allowed";
+                        });
+                    }
+                    
+                    // Always enable buttons since CAPTCHA is already verified
+                    setButtonsEnabled(true);
+                    
+                    // Re-enable on page load
+                    window.addEventListener("load", function() {
+                        setButtonsEnabled(true);
+                    });
+                })();
+                </script>
+                ');
+            }
         }
         
         $mform->addElement('submit', 'getscheme', get_string('getscheme', 'local_application_status_check'));
@@ -114,11 +163,25 @@ class status_form extends \moodleform {
     }
 
     public function validation($data, $files) {
-        global $CFG;
+        global $CFG, $SESSION;
         $errors = parent::validation($data, $files);
         
-        // Validate reCAPTCHA if configured (use Moodle's element verification)
-        if (!empty($CFG->recaptchapublickey) && !empty($CFG->recaptchaprivatekey)) {
+        // Initialize session flag for CAPTCHA verification if not exists
+        if (!isset($SESSION->application_status_captcha_verified)) {
+            $SESSION->application_status_captcha_verified = false;
+        }
+        
+        // Validate reCAPTCHA if configured - ONLY on initial submission (Get Scheme)
+        // Skip validation if:
+        // 1. CAPTCHA was already verified in this session, OR
+        // 2. Check Status button was clicked (not Get Scheme)
+        $checkstatus_pressed = !empty($this->_form->_submitValues['checkstatus']) || 
+                               !empty($this->_form->_submitValues['checkstatus.x']);
+        
+        $captcha_already_verified = !empty($SESSION->application_status_captcha_verified);
+        
+        if (!$checkstatus_pressed && !$captcha_already_verified && 
+            !empty($CFG->recaptchapublickey) && !empty($CFG->recaptchaprivatekey)) {
             $recaptchaelement = $this->_form->getElement('recaptcha_element');
             $response = $this->_form->_submitValues['g-recaptcha-response'] ?? '';
             $response = trim($response);
@@ -128,8 +191,14 @@ class status_form extends \moodleform {
                 $verify = $recaptchaelement->verify($response);
                 if ($verify !== true) {
                     $errors['recaptcha_element'] = get_string('incorrectpleasetryagain', 'auth');
+                } else {
+                    // Mark CAPTCHA as verified in session
+                    $SESSION->application_status_captcha_verified = true;
                 }
             }
+        } else if (!$checkstatus_pressed && $captcha_already_verified) {
+            // CAPTCHA already verified, mark it again to ensure session persists
+            $SESSION->application_status_captcha_verified = true;
         }
         
         // Validate that email field contains either valid email or numeric mobile number
