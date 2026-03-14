@@ -3,6 +3,7 @@ namespace local_profile_feedback_mapper\form;
 
 use moodleform;
 
+use local_profile_feedback_mapper\service\structured_feedback_reader;
 defined('MOODLE_INTERNAL') || die();
 require_once($CFG->libdir . '/formslib.php');
 
@@ -41,14 +42,9 @@ class mapping_form extends moodleform {
         /* =========================
          * Structured feedback criteria
          * ========================= */
-        $criteriaoptions = [];
-        $cs = $DB->get_record('assignfeedback_structured_cs', [], '*', IGNORE_MISSING);
-        if ($cs && $cs->criteria) {
-            $criteria = json_decode($cs->criteria, true);
-            foreach ($criteria as $c) {
-                $criteriaoptions[$c['name']] = $c['name'];
-            }
-        }
+        $reader = new structured_feedback_reader();
+        $assignmentid = (int)($this->_customdata['assignmentid'] ?? 0);
+        $criteriaoptions = $reader->get_assignment_criteria_options($assignmentid);
 
         $mform->addElement(
             'select',

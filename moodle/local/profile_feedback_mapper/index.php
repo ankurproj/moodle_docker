@@ -2,6 +2,8 @@
 require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
 
+use local_profile_feedback_mapper\service\structured_feedback_reader;
+
 admin_externalpage_setup('local_profile_feedback_mapper');
 
 require_login();
@@ -23,6 +25,8 @@ if ($editid) {
     $courseid = $editing->courseid;
     $assignmentid = $editing->assignmentid;
 }
+
+$reader = new structured_feedback_reader();
 
 echo $OUTPUT->header();
 
@@ -47,13 +51,35 @@ if ($save && confirm_sesskey()) {
         'timemodified'   => time(),
     ];
 
-    // Prevent duplicate mappings
-    $exists = $DB->record_exists('local_pf_fb_map', [
-        'courseid'       => $record->courseid,
-        'assignmentid'   => $record->assignmentid,
-        'feedback_field' => $record->feedback_field,
-        'profile_field'  => $record->profile_field,
+    // Prevent duplicate mappings, including legacy name-only mappings.
+    $exists = false;
+    $targetcriterionindex = $reader->get_criterion_index($record->feedback_field);
+    $existingmappings = $DB->get_records('local_pf_fb_map', [
+        'courseid' => $record->courseid,
+        'assignmentid' => $record->assignmentid,
+        'profile_field' => $record->profile_field,
     ]);
+
+    foreach ($existingmappings as $existingmapping) {
+        if ($id && (int)$existingmapping->id === $id) {
+            continue;
+        }
+
+        $existingcriterionindex = $reader->get_criterion_index((string)$existingmapping->feedback_field);
+        if (
+            $targetcriterionindex !== null &&
+            $existingcriterionindex !== null &&
+            $targetcriterionindex === $existingcriterionindex
+        ) {
+            $exists = true;
+            break;
+        }
+
+        if ((string)$existingmapping->feedback_field === (string)$record->feedback_field) {
+            $exists = true;
+            break;
+        }
+    }
 
     if ($exists && !$id) {
         echo $OUTPUT->notification('This mapping already exists', 'error');
@@ -83,11 +109,11 @@ $assignments = $courseid
 // Structured feedback criteria
 $criteria = [];
 if ($assignmentid) {
-    $cs = $DB->get_record('assignfeedback_structured_cs', [], '*', IGNORE_MISSING);
-    if ($cs && $cs->criteria) {
-        foreach (json_decode($cs->criteria, true) as $c) {
-            $criteria[$c['name']] = $c['name'];
-        }
+    $criteria = $reader->get_assignment_criteria_options($assignmentid);
+
+    $selectedcriterion = $editing->feedback_field ?? '';
+    if ($selectedcriterion !== '' && !array_key_exists($selectedcriterion, $criteria)) {
+        $criteria[$selectedcriterion] = $reader->format_criterion_reference($selectedcriterion);
     }
 }
 
@@ -146,6 +172,13 @@ if ($courseid) {
 /* Criterion + Profile field */
 if ($assignmentid) {
 
+    if (!$criteria) {
+        echo $OUTPUT->notification(
+            'No structured feedback criteria have been saved for this assignment yet. Grade one submission first, then create the mapping.',
+            'warning'
+        );
+    }
+
     echo html_writer::tag('label', 'Structured Feedback Criterion');
     echo html_writer::select(
         $criteria,
@@ -164,11 +197,13 @@ if ($assignmentid) {
     );
     echo '<br><br>';
 
-    echo html_writer::empty_tag('input', [
-        'type'  => 'submit',
-        'name'  => 'save',
-        'value' => $editing ? 'Update Mapping' : 'Save Mapping'
-    ]);
+    if ($criteria) {
+        echo html_writer::empty_tag('input', [
+            'type'  => 'submit',
+            'name'  => 'save',
+            'value' => $editing ? 'Update Mapping' : 'Save Mapping'
+        ]);
+    }
 }
 
 echo html_writer::end_tag('form');
@@ -195,7 +230,7 @@ foreach ($mappings as $m) {
     $table->data[] = [
         format_string($course),
         format_string($assignment),
-        s($m->feedback_field),
+        s($reader->format_criterion_reference((string)$m->feedback_field)),
         format_string($profilelabel),
         html_writer::link(
             new moodle_url($PAGE->url, ['edit' => $m->id]),
